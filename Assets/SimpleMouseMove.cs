@@ -12,18 +12,24 @@ public class SimpleMouseMove : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
 		Vector2 pos = Camera.main.ScreenToWorldPoint(Input.mousePosition);
-		RaycastHit2D hit = new RaycastHit2D();
+		GameObject hit = null;
+		double topSV = Mathf.NegativeInfinity;
 		RaycastHit2D[] hits = Physics2D.LinecastAll(pos, pos);
-		if(hits.Length > 0){
-			hit = hits[hits.Length-1];
+		for(int i=0; i<hits.Length; i++){
+			SpriteRenderer rend = hits[i].collider.gameObject.GetComponent<SpriteRenderer>();
+			if(rend.sortingOrder > topSV){
+				hit = rend.gameObject;
+				topSV = rend.sortingOrder;
+			}
 		}
-		if(prevObj != null && (hit.collider==null || prevObj!=hit.collider.gameObject)){
+
+		if(prevObj != null && prevObj != hit){
 			prevObj.SendMessage("MouseOut", null, SendMessageOptions.DontRequireReceiver);
 			prevObj = null;
 		}
-		if(hit.collider!=null){
-			hit.collider.gameObject.SendMessage("MouseOver", null, SendMessageOptions.DontRequireReceiver);
-			prevObj = hit.collider.gameObject;
+		if(hit!=null){
+			hit.SendMessage("MouseOver", null, SendMessageOptions.DontRequireReceiver);
+			prevObj = hit;
 		}
 	}
 }
