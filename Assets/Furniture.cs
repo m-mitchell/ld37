@@ -6,11 +6,15 @@ public class Furniture : MonoBehaviour {
 	public string verb;
 	public string fnVerb;
 
-	void MouseOver() { 
+	void Click() { 
 		GameController.GetInstance().SetCurrentTarget(this);
 	}
-	
+
+	void MouseOver() { 
+		GameController.GetInstance().SetHoverTarget(this);
+	}
+
 	void MouseOut() { 
-		GameController.GetInstance().SetCurrentTarget(null);
+		GameController.GetInstance().SetHoverTarget(null);
 	}
 }

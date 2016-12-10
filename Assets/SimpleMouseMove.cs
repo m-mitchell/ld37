@@ -29,6 +29,9 @@ public class SimpleMouseMove : MonoBehaviour {
 		}
 		if(hit!=null){
 			hit.SendMessage("MouseOver", null, SendMessageOptions.DontRequireReceiver);
+			if (Input.GetMouseButtonDown(0)){
+				hit.SendMessage("Click", null, SendMessageOptions.DontRequireReceiver);
+			}
 			prevObj = hit;
 		}
 	}
