@@ -13,12 +13,11 @@ public class GameTrait {
 	public float progress = 0f;
 	public int level = 0;
 
-	public void Tick(int multiplier){
-		progress += 0.05f * multiplier;
-		if(progress >= 1f){
-			int mod = (int)(progress % 1);
-			progress -= mod;
-			level += (int)mod;
+	public void Tick(float multiplier){
+		progress += 0.015f * multiplier;
+		while(progress >= 1f){
+			progress -= 1;
+			level += (int)1;
 		}
 	}
 }
@@ -87,7 +86,7 @@ public class GameController : MonoBehaviour {
 			timer -= minsPerTimerTick;
 			needs.Tick(minsPerTimerTick);
 			//todo check gameover
-			//todo check & apply current action
+			ApplyCurrentAction(minsPerTimerTick);
 		}
 	}
 
@@ -129,5 +128,39 @@ public class GameController : MonoBehaviour {
 	public void SetCurrentTarget(Furniture f){
 		currentTarget = f;
 		textCurrentVerb.text = currentTarget.verb;
+	}
+
+	private void ApplyCurrentAction(int multiplier){
+		if(currentTarget == null){
+			return;
+		}
+
+		if(currentTarget.fnVerb == "sleep"){
+			needs.slp = (float)Mathf.Max(0, (needs.slp-0.003f)*multiplier);
+
+		} else if (currentTarget.fnVerb == "pee"){
+			needs.pee = (float)Mathf.Max(0, (needs.pee-0.1f)*multiplier);
+
+		} else if (currentTarget.fnVerb == "eat"){
+			needs.hun = (float)Mathf.Max(0, (needs.hun-0.05f)*multiplier);
+
+		} else if (currentTarget.fnVerb == "draw"){
+			game.gfx.Tick(multiplier);
+
+		} else if (currentTarget.fnVerb == "code"){
+			game.fun.Tick(multiplier);
+
+		} else if (currentTarget.fnVerb == "writeMusic"){
+			game.sfx.Tick(multiplier);
+
+		} else if (currentTarget.fnVerb == "brainstorm"){
+			game.new_.Tick(multiplier);
+
+		} else {
+			Debug.LogError(string.Format(
+				"Don't have a handler for action {0}", 
+				currentTarget.fnVerb
+			));
+		}
 	}
 }
