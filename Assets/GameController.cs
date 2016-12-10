@@ -12,6 +12,15 @@ public class Game {
 public class GameTrait {
 	public float progress = 0f;
 	public int level = 0;
+
+	public void Tick(int multiplier){
+		progress += 0.05f * multiplier;
+		if(progress >= 1f){
+			int mod = (int)(progress % 1);
+			progress -= mod;
+			level += (int)mod;
+		}
+	}
 }
 
 public class Needs {
@@ -19,6 +28,14 @@ public class Needs {
 	public float pee = 0f;
 	public float hyg = 0f;
 	public float slp = 0f;
+
+	public void Tick(int multiplier){
+		hun += 0.003f * multiplier;
+		float fullness = Mathf.Max(0, (1-hun));
+		pee += (.008f*fullness + 0.0001f) * multiplier;
+		hyg += 0.0002f * multiplier;
+		slp += 0.0005f * multiplier;
+	}
 }
 
 public class GameController : MonoBehaviour {
@@ -49,6 +66,9 @@ public class GameController : MonoBehaviour {
 	private static GameController instance;
 
 	private int timer = 4800;
+	private int ticksPerTimerTick = 3;
+	private int minsPerTimerTick = 1;
+	private int ticks = 0;
 	private Game game = new Game();
 	private Needs needs = new Needs();
 
@@ -56,18 +76,29 @@ public class GameController : MonoBehaviour {
 	void Start () {
 		instance = this;
 	}
-	
 	public static GameController GetInstance(){
 		return instance;
 	}
 
-	// Update is called once per frame
+	void FixedUpdate () {
+		ticks += 1;
+		if(ticks >= ticksPerTimerTick){
+			ticks = 0;
+			timer -= minsPerTimerTick;
+			needs.Tick(minsPerTimerTick);
+			//todo check gameover
+			//todo check & apply current action
+		}
+	}
+
 	void Update () {
 		UpdateUI();
 	}
-
 	void UpdateUI(){
-		textTimer.text = "48:00";
+		string hr = (timer/100).ToString("D2");
+		string min = (timer%100).ToString("D2");
+		textTimer.text = string.Format("{0}:{1}", hr, min);
+
 		barGameNew.SetValue(game.new_.progress);
 		barGameGfx.SetValue(game.gfx.progress);
 		barGameSfx.SetValue(game.sfx.progress);
