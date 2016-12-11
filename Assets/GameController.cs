@@ -112,6 +112,7 @@ public class GameController : MonoBehaviour {
 
 	public GameObject winPopup;
 	public GameObject losePopup;
+	public GameObject instructionsPopup;
 
 	// lost popup
 	public Text textLostEpilogue;
@@ -158,7 +159,7 @@ public class GameController : MonoBehaviour {
 	private Game game = new Game();
 	private Needs needs = new Needs();
 
-	private bool gameOver = false;
+	private bool gameOver = true;
 
 	// Use this for initialization
 	void Start () {
@@ -166,10 +167,11 @@ public class GameController : MonoBehaviour {
 		simpleMouseMove = GetComponent<SimpleMouseMove>();
 		winPopup.SetActive(false);
 		losePopup.SetActive(false);
-		SetCurrentTarget(initialFurniture);
+		instructionsPopup.SetActive(true);
 	}
 
 	void Reset(){
+		instructionsPopup.SetActive(false);
 		SetCurrentTarget(initialFurniture);
 		gameOver = false;
 		timer = 2880;
