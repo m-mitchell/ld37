@@ -21,7 +21,7 @@ public class GameTrait {
 	public int level = 0;
 
 	public void Tick(float multiplier){
-		progress += 0.015f * multiplier;
+		progress += 0.005f * multiplier;
 		while(progress >= 1f){
 			progress -= 1;
 			level += (int)1;
