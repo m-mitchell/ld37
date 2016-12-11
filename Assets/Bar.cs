@@ -18,4 +18,8 @@ public class Bar : MonoBehaviour {
 		value = v;
 		contents.GetComponent<LayoutElement>().preferredWidth = v*maxContentWidth;
 	}
+
+	public void ChangeFill(Sprite fillSprite){
+		contents.GetComponent<Image>().sprite = fillSprite;
+	}
 }

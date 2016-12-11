@@ -20,12 +20,30 @@ public class GameTrait {
 	public float progress = 0f;
 	public int level = 0;
 
-	public void Tick(float multiplier){
+	public bool Tick(float multiplier){
+		// Returns whether we just ticked over to level 5
+		if(level==5){ return false; }
 		progress += 0.005f * multiplier;
 		while(progress >= 1f){
 			progress -= 1;
 			level += (int)1;
 		}
+		if(level>=5){
+			level = 5;
+			progress = 0f;
+			return true;
+		}
+		return false;
+	}
+	public float GetDisplayProgress(){
+		if(level >= 5){
+			return 1f;
+		}
+		return progress;
+	}
+
+	public float GetScore(){
+		return level + progress;
 	}
 }
 
@@ -43,9 +61,9 @@ public class Needs {
 	}
 
 	public void Tick(int multiplier){
-		hun += 0.003f * multiplier;
+		hun += 0.001f * multiplier;
 		float fullness = Mathf.Max(0, (1-hun));
-		pee += (.008f*fullness + 0.0001f) * multiplier;
+		pee += (.002f*fullness*fullness) * multiplier;
 		hyg += 0.0002f * multiplier;
 		slp += 0.0005f * multiplier;
 	}
@@ -58,6 +76,8 @@ public class GameController : MonoBehaviour {
 	public Text textCurrentVerb;
 	public Text textTimer;
 
+	public Sprite goldBarSprite;
+	public Sprite greenBarSprite;
 	public Bar barGameNew;
 	public Bar barGameGfx;
 	public Bar barGameSfx;
@@ -76,6 +96,26 @@ public class GameController : MonoBehaviour {
 	public GameObject winPopup;
 	public GameObject losePopup;
 
+	// lost popup
+	public Text textLostEpilogue;
+
+	// won popup
+	public Text textWonEpilogue;
+
+	public Text textPlaceOverall;
+	public Text textPlaceInnovation;
+	public Text textPlaceGraphics;
+	public Text textPlaceSound;
+	public Text textPlaceFun;
+
+	public Text textScoreOverall;
+	public Text textScoreInnovation;
+	public Text textScoreGraphics;
+	public Text textScoreSound;
+	public Text textScoreFun;
+
+	public Furniture initialFurniture;
+
 	//
 	private Furniture currentTarget = null;
 	private Furniture hoverTarget = null;
@@ -83,12 +123,14 @@ public class GameController : MonoBehaviour {
 	private static GameController instance;
 	private SimpleMouseMove simpleMouseMove;
 
-	private int timer = 4800;
-	private int ticksPerTimerTick = 3;
+	private int timer = 2880;
+	private int ticksPerTimerTick = 1;
 	private int minsPerTimerTick = 1;
 	private int ticks = 0;
 	private Game game = new Game();
 	private Needs needs = new Needs();
+
+	private bool gameOver = false;
 
 	// Use this for initialization
 	void Start () {
@@ -99,9 +141,15 @@ public class GameController : MonoBehaviour {
 	}
 
 	void Reset(){
-		timer = 4800;
+		SetCurrentTarget(initialFurniture);
+		gameOver = false;
+		timer = 2880;
 		needs.Reset();
 		game.Reset();
+		barGameGfx.ChangeFill(greenBarSprite);
+		barGameFun.ChangeFill(greenBarSprite);
+		barGameSfx.ChangeFill(greenBarSprite);
+		barGameNew.ChangeFill(greenBarSprite);
 	}
 
 	public static GameController GetInstance(){
@@ -109,27 +157,85 @@ public class GameController : MonoBehaviour {
 	}
 
 	void FixedUpdate () {
+		if(gameOver){
+			return;
+		}
 		ticks += 1;
 		if(ticks >= ticksPerTimerTick){
 			ticks = 0;
 			timer -= minsPerTimerTick;
 			needs.Tick(minsPerTimerTick);
-			//todo check gameover
 			ApplyCurrentAction(minsPerTimerTick);
+			if(timer <= 0){
+				ShowGameWon();
+			} else if(needs.hun >= 1f){
+				ShowGameLost("You ended up collapsing due to lack of food.");
+			} else if(needs.slp >= 1f){
+				ShowGameLost("You ended up collapsing due to lack of sleep.");
+			} else if(needs.pee >= 1f){
+				ShowGameLost("You made a huge mess and had to spend the rest of the weekend cleaning.");
+			}
 		}
 	}
 
 	public void ShowGameWon(){
-		//todo
+		gameOver = true;
 		simpleMouseMove.enabled = false;
+
+		int numParticipants = Random.Range(900,1200);
+		float slope = 5f/numParticipants;
+
+		float score_new = game.new_.GetScore();
+		int place_new = numParticipants - (int)(score_new/slope) + 1;
+		if(score_new == 5) { place_new = 1;}
+		
+		float score_gfx = game.gfx.GetScore();
+		int place_gfx = numParticipants - (int)(score_gfx/slope) + 1;
+		if(score_gfx == 5) { place_gfx = 1;}
+		
+		float score_sfx = game.sfx.GetScore();
+		int place_sfx = numParticipants - (int)(score_sfx/slope) + 1;
+		if(score_sfx == 5) { place_sfx = 1;}
+		
+		float score_fun = game.fun.GetScore();
+		int place_fun = numParticipants - (int)(score_fun/slope) + 1;
+		if(score_fun == 5) { place_fun = 1;}
+		
+		float score_total = (score_new+score_gfx+score_sfx+score_fun)/4;
+		int place_total = numParticipants - (int)(score_total/slope) + 1;
+		if(score_total == 5) { place_total = 1;}
+
+		//todo
+		string quote_a = "This is the most addictive game I've ever played!";
+		string quote_b = "Uh, did you forget to add the sound?";
+
+		textWonEpilogue.text = string.Format("\"{0}\"\n\n\"{1}\"", quote_a, quote_b);
+
+		textPlaceOverall.text = string.Format("#{0}", place_total);
+		textPlaceInnovation.text = string.Format("#{0}", place_new);
+		textPlaceGraphics.text = string.Format("#{0}", place_gfx);
+		textPlaceSound.text = string.Format("#{0}", place_sfx);
+		textPlaceFun.text = string.Format("#{0}", place_fun);
+
+		textScoreOverall.text = string.Format("{0:0.00}", score_total);
+		textScoreInnovation.text = string.Format("{0:0.00}", score_new);
+		textScoreGraphics.text = string.Format("{0:0.00}", score_gfx);
+		textScoreSound.text = string.Format("{0:0.00}", score_sfx);
+		textScoreFun.text = string.Format("{0:0.00}", score_fun);
+
+		winPopup.SetActive(true);
 	}
 
-	public void ShowGameLost(){
-		//todo
+	public void ShowGameLost(string epilogue){
+		gameOver = true;
 		simpleMouseMove.enabled = false;
+		epilogue += "\n\nMaybe you should have taken better care of yourself. :(";
+		textLostEpilogue.text = epilogue;
+		losePopup.SetActive(true);
 	}
 
 	public void Retry(){
+		simpleMouseMove.enabled = true;
 		winPopup.SetActive(false);
 		losePopup.SetActive(false);
 		Reset();
@@ -143,14 +249,15 @@ public class GameController : MonoBehaviour {
 		UpdateUI();
 	}
 	void UpdateUI(){
-		string hr = (timer/100).ToString("D2");
-		string min = (timer%100).ToString("D2");
+		string hr = (timer/60).ToString("D2");
+		string min = (timer%60).ToString("D2");
 		textTimer.text = string.Format("{0}:{1}", hr, min);
 
-		barGameNew.SetValue(game.new_.progress);
-		barGameGfx.SetValue(game.gfx.progress);
-		barGameSfx.SetValue(game.sfx.progress);
-		barGameFun.SetValue(game.fun.progress);
+		barGameNew.SetValue(game.new_.GetDisplayProgress());
+		barGameGfx.SetValue(game.gfx.GetDisplayProgress());
+		barGameSfx.SetValue(game.sfx.GetDisplayProgress());
+		barGameFun.SetValue(game.fun.GetDisplayProgress());
+
 		textGameNewLevel.text = string.Format("{0}", game.new_.level);
 		textGameGfxLevel.text = string.Format("{0}", game.gfx.level);
 		textGameSfxLevel.text = string.Format("{0}", game.sfx.level);
@@ -194,16 +301,27 @@ public class GameController : MonoBehaviour {
 			needs.hun = (float)Mathf.Max(0, (needs.hun-0.05f)*multiplier);
 
 		} else if (currentTarget.fnVerb == "draw"){
-			game.gfx.Tick(multiplier);
-
+			bool swapBarColor = game.gfx.Tick(multiplier);
+			if(swapBarColor){
+				barGameGfx.ChangeFill(goldBarSprite);
+			}
 		} else if (currentTarget.fnVerb == "code"){
-			game.fun.Tick(multiplier);
+			bool swapBarColor = game.fun.Tick(multiplier);
+			if(swapBarColor){
+				barGameFun.ChangeFill(goldBarSprite);
+			}
 
 		} else if (currentTarget.fnVerb == "writeMusic"){
-			game.sfx.Tick(multiplier);
+			bool swapBarColor = game.sfx.Tick(multiplier);
+			if(swapBarColor){
+				barGameSfx.ChangeFill(goldBarSprite);
+			}
 
 		} else if (currentTarget.fnVerb == "brainstorm"){
-			game.new_.Tick(multiplier);
+			bool swapBarColor = game.new_.Tick(multiplier);
+			if(swapBarColor){
+				barGameNew.ChangeFill(goldBarSprite);
+			}
 
 		} else {
 			Debug.LogError(string.Format(
