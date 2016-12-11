@@ -140,6 +140,9 @@ public class GameController : MonoBehaviour {
 
 	public Furniture initialFurniture;
 
+	public Color outlineHoverColor;
+	public Color outlineSelectedColor;
+
 	//
 	private Furniture currentTarget = null;
 	private Furniture hoverTarget = null;
@@ -382,6 +385,9 @@ public class GameController : MonoBehaviour {
 	}
 
 	public void SetHoverTarget(Furniture f){
+		if(hoverTarget!=null && hoverTarget!=currentTarget){
+			hoverTarget.HideOutline();
+		}
 		hoverTarget = f;
 		if(hoverTarget==null){
 			textNextNoun.text = "";
@@ -391,11 +397,18 @@ public class GameController : MonoBehaviour {
 			textNextNoun.text = hoverTarget.name+" ";
 			textNextVerb.text = hoverTarget.verb;
 			panelNext.SetActive(true);
+			if(f!=currentTarget){
+				f.SetOutlineColor(outlineHoverColor);
+			}
 		}
 	}
 
 	public void SetCurrentTarget(Furniture f){
+		if(currentTarget!=null){
+			currentTarget.HideOutline();
+		}
 		currentTarget = f;
+		f.SetOutlineColor(outlineSelectedColor);
 		textCurrentVerb.text = currentTarget.verb;
 	}
 
