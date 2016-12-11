@@ -7,7 +7,9 @@ public class Furniture : MonoBehaviour {
 	public string fnVerb;
 
 	void Click() { 
-		GameController.GetInstance().SetCurrentTarget(this);
+		GameController instance = GameController.GetInstance();
+		instance.PlaySound(instance.sfxClick);
+		instance.SetCurrentTarget(this);
 	}
 
 	void MouseOver() { 

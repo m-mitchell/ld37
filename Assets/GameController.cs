@@ -22,16 +22,28 @@ public class GameTrait {
 
 	public bool Tick(float multiplier){
 		// Returns whether we just ticked over to level 5
+		
 		if(level==5){ return false; }
-		progress += 0.005f * multiplier;
+
+		float levelMultiplier =(1f/(level+1f));
+		progress += 0.01f * multiplier * levelMultiplier;
+
+		bool leveled = false;
 		while(progress >= 1f){
+			leveled = true;
 			progress -= 1;
 			level += (int)1;
 		}
 		if(level>=5){
+			GameController instance = GameController.GetInstance();
+			instance.PlaySound(instance.sfxMaxLevel);
+
 			level = 5;
 			progress = 0f;
 			return true;
+		} else if (leveled){
+			GameController instance = GameController.GetInstance();
+			instance.PlaySound(instance.sfxLevelUp);
 		}
 		return false;
 	}
@@ -66,6 +78,10 @@ public class Needs {
 		pee += (.002f*fullness*fullness) * multiplier;
 		hyg += 0.0002f * multiplier;
 		slp += 0.0005f * multiplier;
+	}
+
+	public bool InDanger(){
+		return hun >= 0.8f || pee >= 0.8f || hyg >= 0.8f || slp >= 0.8f;
 	}
 }
 
@@ -114,6 +130,12 @@ public class GameController : MonoBehaviour {
 	public Text textScoreSound;
 	public Text textScoreFun;
 
+	public AudioSource sfxSource;
+	public AudioClip sfxLevelUp;
+	public AudioClip sfxMaxLevel;
+	public AudioClip sfxWarningBeep;
+	public AudioClip sfxClick;
+
 	public Furniture initialFurniture;
 
 	//
@@ -127,6 +149,11 @@ public class GameController : MonoBehaviour {
 	private int ticksPerTimerTick = 1;
 	private int minsPerTimerTick = 1;
 	private int ticks = 0;
+
+
+	private int ticksPerWarningBeep = 10;
+	private int warningBeepTicks = 0;
+
 	private Game game = new Game();
 	private Needs needs = new Needs();
 
@@ -138,6 +165,7 @@ public class GameController : MonoBehaviour {
 		simpleMouseMove = GetComponent<SimpleMouseMove>();
 		winPopup.SetActive(false);
 		losePopup.SetActive(false);
+		SetCurrentTarget(initialFurniture);
 	}
 
 	void Reset(){
@@ -156,15 +184,29 @@ public class GameController : MonoBehaviour {
 		return instance;
 	}
 
+	public void PlaySound(AudioClip sound){
+		sfxSource.PlayOneShot(sound);
+	}
+
 	void FixedUpdate () {
 		if(gameOver){
 			return;
 		}
+
+		if(needs.InDanger()){
+			warningBeepTicks += 1;
+			if(warningBeepTicks >= ticksPerWarningBeep){
+				PlaySound(sfxWarningBeep);
+				warningBeepTicks = 0;
+			}
+		}
+
 		ticks += 1;
 		if(ticks >= ticksPerTimerTick){
 			ticks = 0;
 			timer -= minsPerTimerTick;
 			needs.Tick(minsPerTimerTick);
+
 			ApplyCurrentAction(minsPerTimerTick);
 			if(timer <= 0){
 				ShowGameWon();
@@ -176,6 +218,15 @@ public class GameController : MonoBehaviour {
 				ShowGameLost("You made a huge mess and had to spend the rest of the weekend cleaning.");
 			}
 		}
+	}
+
+	private string GetQuoteText(){
+		string quote_a = "Pretty neat!";
+		string quote_b = "This is OK I guess?";
+
+
+		//todo
+		return string.Format("\"{0}\"\n\n\"{1}\"", quote_a, quote_b);
 	}
 
 	public void ShowGameWon(){
@@ -205,11 +256,7 @@ public class GameController : MonoBehaviour {
 		int place_total = numParticipants - (int)(score_total/slope) + 1;
 		if(score_total == 5) { place_total = 1;}
 
-		//todo
-		string quote_a = "This is the most addictive game I've ever played!";
-		string quote_b = "Uh, did you forget to add the sound?";
-
-		textWonEpilogue.text = string.Format("\"{0}\"\n\n\"{1}\"", quote_a, quote_b);
+		textWonEpilogue.text = GetQuoteText();
 
 		textPlaceOverall.text = string.Format("#{0}", place_total);
 		textPlaceInnovation.text = string.Format("#{0}", place_new);
