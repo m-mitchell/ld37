@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using UnityEngine.UI;
 using System.Collections;
+using System.Collections.Generic;
 
 public class Game {
 	public GameTrait new_ = new GameTrait();
@@ -26,7 +27,7 @@ public class GameTrait {
 		if(level==5){ return false; }
 
 		float levelMultiplier =(1f/(level+1f));
-		progress += 0.01f * multiplier * levelMultiplier;
+		progress += 0.015f * multiplier * levelMultiplier;
 
 		bool leveled = false;
 		while(progress >= 1f){
@@ -73,9 +74,9 @@ public class Needs {
 	}
 
 	public void Tick(int multiplier){
-		hun += 0.001f * multiplier;
+		hun += 0.002f * multiplier;
 		float fullness = Mathf.Max(0, (1-hun));
-		pee += (.002f*fullness*fullness) * multiplier;
+		pee += (.004f*fullness*fullness) * multiplier;
 		hyg += 0.0002f * multiplier;
 		slp += 0.0005f * multiplier;
 	}
@@ -221,12 +222,75 @@ public class GameController : MonoBehaviour {
 	}
 
 	private string GetQuoteText(){
-		string quote_a = "Pretty neat!";
-		string quote_b = "This is OK I guess?";
+		int foundQuotes = 0;
+		List<string> reviews = new List<string>();
+
+		// Comment on most "outstanding" bits first (both positive and negative)
+		if(game.new_.level == 5){
+			reviews.Add("Wow, this is a really unique game!");
+		}
+		if(game.fun.level == 5){
+			reviews.Add("Most addictive game I've played this year.");
+		}
+		if(game.gfx.level == 5){
+			reviews.Add("These graphics are incredible! Are you a professional?");
+		}
+		if(game.sfx.level == 5){
+			reviews.Add("Amazing soundtrack.");
+		}
+		if(game.new_.level == 0){
+			reviews.Add("This is just a Tetris clone.");
+		}
+		if(game.fun.level == 0){
+			reviews.Add("I'd rather do my taxes than play this again.");
+		}
+		if(game.gfx.level == 0){
+			reviews.Add("Worst graphics since Dwarf Fortress.");
+		}
+		if(game.sfx.level == 0){
+			reviews.Add("Did you forget to add the sound?");
+		}
+
+		if(game.new_.level == 4){
+			reviews.Add("Love the mechanics. Quirky, but they work!");
+		}
+		if(game.fun.level == 4){
+			reviews.Add("I played this for way too long, super fun!");
+		}
+		if(game.gfx.level == 4){
+			reviews.Add("I really like the graphics!");
+		}
+		if(game.sfx.level == 4){
+			reviews.Add("So where can I download the soundtrack? :)");
+		}
+		if(game.new_.level == 1){
+			reviews.Add("Not a lot of new ideas here.");
+		}
+		if(game.fun.level == 1){
+			reviews.Add("OK to play on the toilet, I guess.");
+		}
+		if(game.gfx.level == 1){
+			reviews.Add("Graphics are very... abstract.");
+		}
+		if(game.sfx.level == 1){
+			reviews.Add("I can send you some beginner chiptune tutorials if you'd like?");
+		}
 
 
-		//todo
-		return string.Format("\"{0}\"\n\n\"{1}\"", quote_a, quote_b);
+		if(game.new_.level == 2 || game.new_.level == 3){
+			reviews.Add("There are a couple new mechanics in here to check out.");
+		}
+		if(game.fun.level == 2 || game.fun.level == 3){
+			reviews.Add("I played a few rounds. It's ok!");
+		}
+		if(game.gfx.level == 2 || game.gfx.level == 3){
+			reviews.Add("Graphics are decent.");
+		}
+		if(game.sfx.level == 2 || game.sfx.level == 3){
+			reviews.Add("Sound seems a little rushed.");
+		}
+
+		return string.Format("\"{0}\"\n\n\"{1}\"", reviews[0], reviews[1]);
 	}
 
 	public void ShowGameWon(){
