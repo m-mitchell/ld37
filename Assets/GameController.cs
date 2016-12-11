@@ -7,6 +7,13 @@ public class Game {
 	public GameTrait gfx = new GameTrait();
 	public GameTrait sfx = new GameTrait();
 	public GameTrait fun = new GameTrait();
+
+	public void Reset(){
+		new_ = new GameTrait();
+		gfx = new GameTrait();
+		sfx = new GameTrait();
+		fun = new GameTrait();
+	}
 }
 
 public class GameTrait {
@@ -27,6 +34,13 @@ public class Needs {
 	public float pee = 0f;
 	public float hyg = 0f;
 	public float slp = 0f;
+
+	public void Reset(){
+		hun = 0f;
+		pee = 0f;
+		hyg = 0f;
+		slp = 0f;
+	}
 
 	public void Tick(int multiplier){
 		hun += 0.003f * multiplier;
@@ -59,10 +73,15 @@ public class GameController : MonoBehaviour {
 	public Bar barNeedsHyg;
 	public Bar barNeedsSlp;
 
+	public GameObject winPopup;
+	public GameObject losePopup;
+
 	//
 	private Furniture currentTarget = null;
 	private Furniture hoverTarget = null;
+
 	private static GameController instance;
+	private SimpleMouseMove simpleMouseMove;
 
 	private int timer = 4800;
 	private int ticksPerTimerTick = 3;
@@ -74,7 +93,17 @@ public class GameController : MonoBehaviour {
 	// Use this for initialization
 	void Start () {
 		instance = this;
+		simpleMouseMove = GetComponent<SimpleMouseMove>();
+		winPopup.SetActive(false);
+		losePopup.SetActive(false);
 	}
+
+	void Reset(){
+		timer = 4800;
+		needs.Reset();
+		game.Reset();
+	}
+
 	public static GameController GetInstance(){
 		return instance;
 	}
@@ -88,6 +117,26 @@ public class GameController : MonoBehaviour {
 			//todo check gameover
 			ApplyCurrentAction(minsPerTimerTick);
 		}
+	}
+
+	public void ShowGameWon(){
+		//todo
+		simpleMouseMove.enabled = false;
+	}
+
+	public void ShowGameLost(){
+		//todo
+		simpleMouseMove.enabled = false;
+	}
+
+	public void Retry(){
+		winPopup.SetActive(false);
+		losePopup.SetActive(false);
+		Reset();
+	}
+
+	public void Quit(){
+		Application.Quit();
 	}
 
 	void Update () {
